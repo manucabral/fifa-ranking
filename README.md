@@ -1,2 +1,2 @@
 # pyfifa
-A easy-to-use wrapper for fetching data from FIFA.
+A easy-to-use wrapper for fetching data from FIFA.com
