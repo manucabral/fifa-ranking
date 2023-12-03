@@ -1,6 +1,7 @@
 """
 This module contains only utility functions used by the other modules.
 """
+import os
 import pickle
 import httpx
 import lxml.html as parser
@@ -47,6 +48,19 @@ def exist_file(path: str) -> bool:
             return True
     except FileNotFoundError:
         return False
+
+
+def create_directory(path: str) -> None:
+    """
+    Creates a directory.
+
+    Args:
+        path (str): The path of the directory.
+    """
+    try:
+        os.mkdir(path)
+    except FileExistsError:
+        pass
 
 
 def get(url: str) -> str:
