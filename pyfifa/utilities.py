@@ -44,9 +44,10 @@ def exist_file(path: str) -> bool:
         bool: True if the file exists, False otherwise.
     """
     try:
-        with open(path, "r", encoding="utf-8"):
-            return True
-    except FileNotFoundError:
+        # check if the file exists and if it's not empty
+        return os.path.isfile(path) and os.path.getsize(path) > 0
+    except OSError:
+        print(f"Failed to check if the file exists: {path}")
         return False
 
 
