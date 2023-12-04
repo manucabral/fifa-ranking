@@ -3,8 +3,9 @@ Provides the ranking class and the ranking ids function to get all the ranking i
 
 Example:
     >>> import pyfifa
-    >>> last = pyfifa.ranking_ids()[0]
-    >>> ranking = pyfifa.Ranking(ranking_id=last)
+    >>> ranking = pyfifa.Ranking()
+    >>> ranking
+    Ranking(id=FifaRankingId(date=2021-04-07), lang=en,  limit=None)
 """
 
 import json
