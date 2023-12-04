@@ -55,6 +55,154 @@ class FifaRankingId:
         return f"FifaRankingId(date={self.__date})"
 
 
+class Flag:
+    """
+    Represents a flag.
+    """
+
+    __slots__ = ("__src", "__title")
+
+    def __init__(self, src: str, title: str):
+        """
+        Args:
+            src (str): The source of the flag (url).
+            title (str): The title of the flag (country name).
+        """
+        self.__src = src
+        self.__title = title
+
+    @property
+    def src(self) -> str:
+        """
+        Returns:
+            str: The source of the flag (url).
+        """
+        return self.__src
+
+    @property
+    def title(self) -> str:
+        """
+        Returns:
+            str: The title of the flag (country name).
+        """
+        return self.__title
+
+    def __str__(self) -> str:
+        """
+        Returns:
+            str: The string representation of the flag.
+        """
+        return f"Flag(title={self.__title})"
+
+    def __repr__(self) -> str:
+        """
+        Returns:
+            str: The representation of the flag.
+        """
+        return str(self)
+
+
+class RankingItem:
+    """
+    Represents a ranking item (team).
+    """
+
+    def __init__(self, **kwargs):
+        """
+        Args:
+            **kwargs: The ranking item data (see the attributes below).
+
+        Attributes:
+            rank (int): The rank of the team.
+            name (str): The name of the team.
+            total_points (int): The total points of the team.
+            previous_points (int): The previous points of the team.
+            country_code (str): The country code of the team.
+            confederation (str): The confederation of the team (e.g. "UEFA")
+            flag (Flag): The flag of the team.
+        """
+        self.__rank = kwargs.get("rank", 0)
+        self.__name = kwargs.get("name", "Unknown")
+        self.__total_points = kwargs.get("totalPoints", 0)
+        self.__previous_points = kwargs.get("previousPoints", 0)
+        self.__country_code = kwargs.get("countryCode", "Unknown")
+        self.__confederation = kwargs.get("confederation", "Unknown")
+        self.__flag = Flag(
+            src=kwargs["flag"]["src"],
+            title=kwargs["flag"]["title"],
+        )
+
+    def __str__(self) -> str:
+        """
+        Returns:
+            str: The string representation of the ranking item.
+        """
+        return f"RankingItem({self.__dict__})"
+
+    def __repr__(self) -> str:
+        """
+        Returns:
+            str: The representation of the ranking item.
+        """
+        return str(self)
+
+    @property
+    def rank(self) -> int:
+        """
+        Returns:
+            int: The rank of the team.
+        """
+        return self.__rank
+
+    @property
+    def name(self) -> str:
+        """
+        Returns:
+            str: The name of the team.
+        """
+        return self.__name
+
+    @property
+    def total_points(self) -> int:
+        """
+        Returns:
+            int: The total points of the team.
+        """
+        return self.__total_points
+
+    @property
+    def previous_points(self) -> int:
+        """
+        Returns:
+            int: The previous points of the team.
+        """
+        return self.__previous_points
+
+    @property
+    def country_code(self) -> str:
+        """
+        Returns:
+            str: The country code of the team.
+        """
+        return self.__country_code
+
+    @property
+    def confederation(self) -> str:
+        """
+        Returns:
+            str: The confederation of the team (e.g. "UEFA")
+        """
+        return self.__confederation
+
+    @property
+    def flag(self) -> Flag:
+        """
+        Returns:
+            Flag: The flag of the team.
+        """
+        return self.__flag
+
+
 class Ranking:
     """
     Represents a FIFA ranking.
@@ -62,6 +210,11 @@ class Ranking:
     Attributes:
         ranking_id (FifaRankingId): The id of the ranking.
         lang (str): The language of the ranking.
+
+    Other Attributes:
+        limit (int): The limit of the ranking items (teams).
+        data (dict): The crude ranking data.
+
     """
 
     def __init__(self, ranking_id: FifaRankingId, lang: str = "en", **kwargs):
@@ -72,6 +225,7 @@ class Ranking:
         """
         self.__id = ranking_id
         self.__lang = lang
+        self.__limit = kwargs.get("limit", None)
         path = CACHE.FIFA_RANKING(ranking_id=ranking_id.value, lang=lang)
         if exist_file(path):
             self.__data = load_pickle(path)
@@ -79,15 +233,19 @@ class Ranking:
             self.__data = self.__get_data(**kwargs)
             save_pickle(path, self.__data)
 
-    def __get_data(self, **kwargs) -> dict:
+    def __get_data(self) -> dict:
         """
-        Returns the ranking data.
+        Gets the ranking data from the API and returns it.
 
         Returns:
             dict: The ranking data.
         """
         response = get(
             ENDPOINTS.RANKING.API.format(lang=self.__lang, id=self.__id.value)
+        )
+        print(
+            "making response to ",
+            ENDPOINTS.RANKING.API.format(lang=self.__lang, id=self.__id.value),
         )
         if not response:
             raise RuntimeError("Failed to get the ranking data.")
@@ -102,6 +260,29 @@ class Ranking:
             str: The string representation of the ranking.
         """
         return f"Ranking(id={self.__id}, lang={self.__lang})"
+
+    def __repr__(self) -> str:
+        """
+        Returns:
+            str: The representation of the ranking.
+        """
+        return str(self)
+
+    def items(self) -> typing.List[RankingItem]:
+        """
+        Returns the ranking items (teams).
+
+        Returns:
+            list[RankingItem]: The ranking items.
+        """
+        return [
+            RankingItem(
+                **item["rankingItem"],
+                previousPoints=item["previousPoints"],
+                confederation=item["tag"]["id"],
+            )
+            for item in self.__data["rankings"][: self.__limit]
+        ]
 
 
 def ranking_ids(
