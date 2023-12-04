@@ -5,7 +5,7 @@ Test the Ranking stuff.
 import os
 import unittest
 from pyfifa import Ranking, ranking_ids
-from pyfifa.ranking import FifaRankingId, RankingItem, FifaRankingId
+from pyfifa.ranking import FifaRankingId, RankingItem
 
 
 class TestRanking(unittest.TestCase):
@@ -46,7 +46,7 @@ class TestRanking(unittest.TestCase):
         ranking = Ranking()
         ranking.export(extension="csv", filename=filename)
         self.assertTrue(os.path.isfile(filename), msg="Should be exported.")
-        with open(filename, "r") as csv_file:
+        with open(filename, "r", encoding="utf-8") as csv_file:
             self.assertTrue(csv_file.readable(), msg="Should be readable.")
         os.remove(filename)
 
@@ -56,7 +56,7 @@ class TestRanking(unittest.TestCase):
         ranking = Ranking()
         ranking.export(extension="json", filename=filename)
         self.assertTrue(os.path.isfile(filename), msg="Should be exported.")
-        with open(filename, "r") as json_file:
+        with open(filename, "r", encoding="utf-8") as json_file:
             self.assertTrue(json_file.readable(), msg="Should be readable.")
         os.remove(filename)
 
