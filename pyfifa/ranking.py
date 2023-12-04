@@ -208,29 +208,38 @@ class Ranking:
     Represents a FIFA ranking.
 
     Attributes:
-        ranking_id (FifaRankingId): The id of the ranking.
-        lang (str): The language of the ranking.
+        ranking_id (FifaRankingId): The id of the ranking, defaults to the last ranking id.
+        lang (str): The language of the ranking, defaults to "en".
 
     Other Attributes:
-        limit (int): The limit of the ranking items (teams).
-        data (dict): The crude ranking data.
+        limit (int): The limit of the ranking items (teams) to get, defaults to None (all).
 
     """
 
-    def __init__(self, ranking_id: FifaRankingId, lang: str = "en", **kwargs):
+    __slots__ = ("__id", "__lang", "__limit", "__data")
+
+    def __init__(self, ranking_id: FifaRankingId = None, lang: str = "en", **kwargs):
         """
         Args:
             ranking_id (FifaRankingId): The id of the ranking.
             lang (str, optional): The language of the ranking. Defaults to "en".
         """
+        if not ranking_id:
+            ranking_id = ranking_ids()[0]
         self.__id = ranking_id
         self.__lang = lang
         self.__limit = kwargs.get("limit", None)
-        path = CACHE.FIFA_RANKING(ranking_id=ranking_id.value, lang=lang)
+        self.__update_data()
+
+    def __update_data(self) -> None:
+        """
+        Updates the ranking data.
+        """
+        path = CACHE.FIFA_RANKING(ranking_id=self.__id, lang=self.__lang)
         if exist_file(path):
             self.__data = load_pickle(path)
         else:
-            self.__data = self.__get_data(**kwargs)
+            self.__data = self.__get_data()
             save_pickle(path, self.__data)
 
     def __get_data(self) -> dict:
@@ -259,7 +268,7 @@ class Ranking:
         Returns:
             str: The string representation of the ranking.
         """
-        return f"Ranking(id={self.__id}, lang={self.__lang})"
+        return f"Ranking(id={self.__id}, lang={self.__lang},  limit={self.__limit})"
 
     def __repr__(self) -> str:
         """
@@ -267,6 +276,64 @@ class Ranking:
             str: The representation of the ranking.
         """
         return str(self)
+
+    @property
+    def id_(self) -> FifaRankingId:
+        """
+        Returns:
+            FifaRankingId: The id of the ranking.
+        """
+        return self.__id
+
+    @id_.setter
+    def id_(self, value: FifaRankingId):
+        """
+        Sets the id of the ranking.
+        """
+        if not isinstance(value, FifaRankingId):
+            raise TypeError("Invalid type for the ranking id.")
+        self.__id = value
+
+    @property
+    def lang(self) -> str:
+        """
+        Returns:
+            str: The language of the ranking.
+        """
+        return self.__lang
+
+    @lang.setter
+    def lang(self, value: str) -> None:
+        """
+        Sets the language of the ranking.
+        """
+        if not isinstance(value, str):
+            raise TypeError("Invalid type for the language.")
+        self.__lang = value
+
+    @property
+    def limit(self) -> int:
+        """
+        Returns:
+            int: The limit of the ranking items (teams) to get.
+        """
+        return self.__limit
+
+    @limit.setter
+    def limit(self, value: int) -> None:
+        """
+        Sets the limit of the ranking items (teams) to get.
+        """
+        if not isinstance(value, int):
+            raise TypeError("Invalid type for the limit.")
+        self.__limit = value
+
+    def update(self) -> None:
+        """
+        Updates the ranking after a change in the ranking ID or the language.
+        Please don't use this method if you don't need to update the ranking.
+        """
+        self.__update_data()
 
     def items(self) -> typing.List[RankingItem]:
         """
@@ -283,6 +350,79 @@ class Ranking:
             )
             for item in self.__data["rankings"][: self.__limit]
         ]
+
+    def export(
+        self, extension: typing.Literal["json", "csv"], filename: str = None
+    ) -> None:
+        """
+        Exports the ranking data to a file.
+
+        Args:
+            extension (str): The extension of the file ("json" or "csv").
+            filename (str, optional): The name of the file. Defaults to None.
+        """
+        if extension not in ["json", "csv"]:
+            raise ValueError("Invalid format.")
+        if extension == "json":
+            self.export_json(filename)
+        else:
+            self.export_csv(filename)
+
+    def export_json(self, filename: str) -> None:
+        """
+        Exports the ranking data to a json file.
+
+        Args:
+            filename (str): The name of the json file.
+        """
+        if not filename:
+            filename = f"ranking_{self.__id.date}.json"
+        try:
+            with open(filename, "w", encoding="utf-8", errors="ignore") as file:
+                data = self.__data.copy()
+                data["rankings"] = data["rankings"][: self.__limit]
+                json.dump(data, file, indent=4, ensure_ascii=False)
+        except OSError as exc:
+            print(f"Failed to export the ranking to {filename}: {exc}")
+            print("Please make sure that the file is not open and try again.")
+
+    def export_csv(self, filename: str = None) -> None:
+        """
+        Exports the ranking data to a csv file.
+
+        Args:
+            filename (str, optional): The name of the csv file. Defaults to None.
+        """
+        if not filename:
+            filename = f"ranking_{self.__id.date}.csv"
+        if not filename.endswith(".csv"):
+            filename += ".csv"
+        try:
+            with open(filename, "w", encoding="utf-8", errors="ignore") as file:
+                file.write(
+                    "Rank,Team,Total Points,Previous Points,Country Code,Confederation,Flag\n"
+                )
+                for item in self.items():
+                    file.write(
+                        ",".join(
+                            map(
+                                str,
+                                [
+                                    item.rank,
+                                    item.name,
+                                    item.total_points,
+                                    item.previous_points,
+                                    item.country_code,
+                                    item.confederation,
+                                    item.flag.src,
+                                ],
+                            )
+                        )
+                        + "\n"
+                    )
+        except OSError as exc:
+            print(f"Failed to export the ranking to {filename}: {exc}")
+            print("Please make sure that the file is not open and try again.")
 
 
 def ranking_ids(
