@@ -30,7 +30,7 @@ class ENDPOINTS:
         Ranking endpoints.
         """
 
-        API = "https://www.fifa.com/api/ranking-overview?locale={lang}&dateId=id{id}"
+        API = "https://www.fifa.com/api/ranking-overview?locale={lang}&dateId={id}"
         HTML = "https://www.fifa.com/fifa-world-ranking/{genre}?locale=en_US"
 
 
