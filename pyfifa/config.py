@@ -12,13 +12,11 @@ if sys.version_info < (3, 8):
 del sys
 
 if platform.system() != "Windows":
-    """for now, pyfifa only works on Windows"""
     raise ImportError("pyfifa only works on Windows.")
 del platform
 
 cache_file = absolute_path("cache")
 if not exist_file(cache_file):
-    """create the cache directory if it doesn't exist"""
     create_directory(cache_file)
 
 del cache_file, create_directory, exist_file, absolute_path
