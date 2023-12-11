@@ -33,6 +33,51 @@ class ENDPOINTS:
         API = "https://www.fifa.com/api/ranking-overview?locale={lang}&dateId={id}"
         HTML = "https://www.fifa.com/fifa-world-ranking/{genre}?locale=en_US"
 
+    class CONFEDERATIONS:
+        """
+        Confederations endpoints.
+        """
+
+        ALL = ["CAF", "CONCACAF", "CONMEBOL", "OFC", "AFC", "UEFA"]
+        API = "https://api.fifa.com/api/v3/confederations/{confederation_id}"
+
+    class TEAMS:
+        """
+        Teams endpoints.
+        """
+
+        class CONMEBOL:
+            """
+            CONMEBOL endpoints.
+            """
+
+            TEAM_IDS = {
+                43922: "Argentina",
+                43923: "Bolivia",
+                43924: "Brazil",
+                43925: "Chile",
+                43926: "Colombia",
+                43927: "Ecuador",
+                43928: "Paraguay",
+                43929: "Peru",
+                43930: "Uruguay",
+                43931: "Venezuela",
+            }
+
+        class UEFA:
+            """
+            UEFA endpoints.
+            """
+
+            TEAM_IDS = {
+                43932: "Albania",
+                43933: "Armenia",
+                43934: "Austria",
+                43935: "Belgium",
+                43936: "Bulgaria",
+                # ...
+            }
+
 
 class CACHE:
     """
