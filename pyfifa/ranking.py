@@ -26,11 +26,10 @@ class FifaRankingId:
         """
         Args:
             value (str): The value of the id (format: "id123").
-            date (str): The date of the id (format: "%d %b %Y").
+            date (str): The date of the id (format: ISO).
         """
         self.__value = value
-        date = date.replace("Sept", "Sep")
-        self.__date = datetime.strptime(date, "%d %b %Y").strftime("%Y-%m-%d")
+        self.__date = date
 
     @property
     def value(self) -> str:
@@ -236,7 +235,7 @@ class Ranking:
         """
         Updates the ranking data.
         """
-        path = CACHE.FIFA_RANKING(ranking_id=self.__id, lang=self.__lang)
+        path = CACHE.FIFA_RANKING(ranking_id=self.__id.value, lang=self.__lang)
         if exist_file(path):
             self.__data = load_pickle(path)
         else:
@@ -451,7 +450,9 @@ def ranking_ids(
         raise RuntimeError("Failed to extract the ranking ids.")
     data = json.loads(xpath_data.pop())["props"]["pageProps"]["pageData"]
     ids = [
-        FifaRankingId(value=d["id"], date=d["text"]) for d in data["ranking"]["dates"]
+        FifaRankingId(value=i["id"], date=i["iso"])
+        for d in data["ranking"]["dates"]
+        for i in d["dates"]
     ]
     save_pickle(cache_path, ids)
     del xpath_data, data
